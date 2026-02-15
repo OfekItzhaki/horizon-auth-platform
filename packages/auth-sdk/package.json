@@ -1,0 +1,30 @@
+{
+  "name": "@tasks-management/frontend-services",
+  "version": "1.3.3",
+  "type": "module",
+  "description": "Front-end services for Tasks Management API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "postinstall": "node scripts/build-if-needed.js"
+  },
+  "keywords": [
+    "tasks",
+    "todo",
+    "api",
+    "client"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.28.6",
+    "zod": "^4.3.6"
+  }
+}

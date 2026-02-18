@@ -1,7 +1,7 @@
 {
   "name": "@ofeklabs/horizon-auth",
-  "version": "0.3.0",
-  "description": "Production-ready NestJS authentication module with 2FA, device management, push notifications, and account management",
+  "version": "0.4.0",
+  "description": "Production-ready NestJS authentication module with ENV-based configuration, 2FA, device management, and SSO support",
   "author": "Ofek Itzhaki",
   "license": "MIT",
   "main": "dist/index.js",
@@ -88,7 +88,10 @@
     "push-notifications",
     "account-management",
     "social-login",
-    "oauth"
+    "oauth",
+    "sso",
+    "env-config",
+    "zero-config"
   ],
   "repository": {
     "type": "git",

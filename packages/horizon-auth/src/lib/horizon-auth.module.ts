@@ -42,7 +42,7 @@ export class HorizonAuthModule {
       return {
         module: HorizonAuthModule,
         imports: [
-          AuthModule, // Only for JWT strategy and guards
+          AuthModule.forSsoMode(), // Only JWT strategy and guards, no database/redis
         ],
         providers,
         exports: ['HORIZON_AUTH_CONFIG', AuthModule],
@@ -55,7 +55,7 @@ export class HorizonAuthModule {
       imports: [
         PrismaModule.forRoot(finalConfig),
         RedisModule.forRoot(finalConfig),
-        AuthModule,
+        AuthModule.forFullMode(), // Full auth service with all features
         UsersModule,
       ],
       providers,
@@ -84,9 +84,11 @@ export class HorizonAuthModule {
       },
     ];
 
+    // Note: forRootAsync doesn't know the config at module definition time,
+    // so we import both AuthModule variants and let runtime config decide
     return {
       module: HorizonAuthModule,
-      imports: [AuthModule, UsersModule],
+      imports: [AuthModule.forFullMode(), UsersModule],
       providers,
       exports: ['HORIZON_AUTH_CONFIG', AuthModule],
     };

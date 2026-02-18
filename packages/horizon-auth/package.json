@@ -1,6 +1,6 @@
 {
   "name": "@ofeklabs/horizon-auth",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Production-ready NestJS authentication module with 2026 security standards",
   "author": "Ofek Itzhaki",
   "license": "MIT",

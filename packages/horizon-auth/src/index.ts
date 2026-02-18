@@ -1,6 +1,7 @@
 // Main entry point for the package
 export * from './lib/horizon-auth.module';
 export * from './lib/horizon-auth-config.interface';
+export * from './lib/horizon-auth-env.config';
 export * from './auth/auth.service';
 export * from './auth/auth.module';
 export * from './common/decorators/public.decorator';

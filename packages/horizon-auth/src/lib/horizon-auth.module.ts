@@ -1,6 +1,7 @@
 import { Module, DynamicModule, Global, Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { HorizonAuthConfig } from './horizon-auth-config.interface';
+import { loadConfigFromEnv, mergeWithEnvConfig } from './horizon-auth-env.config';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { RedisModule } from '../redis/redis.module';
@@ -12,25 +13,29 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class HorizonAuthModule {
   /**
    * Configure the HorizonAuth module with the provided configuration
-   * @param config - Configuration options
+   * User config is merged with environment variables (user config takes precedence)
+   * @param config - Configuration options (optional - can use ENV variables only)
    * @returns Dynamic module
    */
-  static forRoot(config: HorizonAuthConfig): DynamicModule {
-    // Validate configuration
-    this.validateConfig(config);
+  static forRoot(config?: Partial<HorizonAuthConfig>): DynamicModule {
+    // Merge user config with environment config
+    const finalConfig = config ? mergeWithEnvConfig(config) : loadConfigFromEnv() as HorizonAuthConfig;
 
-    // Set defaults
-    const finalConfig = this.applyDefaults(config);
+    // Validate configuration
+    this.validateConfig(finalConfig);
+
+    // Apply defaults
+    const configWithDefaults = this.applyDefaults(finalConfig);
 
     const providers: Provider[] = [
       {
         provide: 'HORIZON_AUTH_CONFIG',
-        useValue: finalConfig,
+        useValue: configWithDefaults,
       },
     ];
 
     // Apply global JWT guard if configured
-    if (finalConfig.guards?.applyJwtGuardGlobally) {
+    if (configWithDefaults.guards?.applyJwtGuardGlobally) {
       providers.push({
         provide: APP_GUARD,
         useClass: JwtAuthGuard,
@@ -38,7 +43,7 @@ export class HorizonAuthModule {
     }
 
     // SSO Mode - only import JWT verification modules
-    if (finalConfig.ssoMode) {
+    if (configWithDefaults.ssoMode) {
       return {
         module: HorizonAuthModule,
         imports: [
@@ -53,9 +58,9 @@ export class HorizonAuthModule {
     return {
       module: HorizonAuthModule,
       imports: [
-        PrismaModule.forRoot(finalConfig),
-        RedisModule.forRoot(finalConfig),
-        AuthModule.forFullMode(finalConfig), // Pass config for conditional feature registration
+        PrismaModule.forRoot(configWithDefaults),
+        RedisModule.forRoot(configWithDefaults),
+        AuthModule.forFullMode(configWithDefaults), // Pass config for conditional feature registration
         UsersModule,
       ],
       providers,

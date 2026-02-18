@@ -39,7 +39,49 @@ Each application has its own isolated authentication.
 
 ## Quick Start
 
-### Portfolio SSO Setup (Recommended)
+### Option 1: Environment Variables Only (Recommended)
+
+The simplest way - configure everything through ENV variables:
+
+```bash
+npm install @ofeklabs/horizon-auth
+```
+
+```env
+# .env
+AUTH_MODE=full
+DATABASE_URL=postgresql://user:password@localhost:5432/myapp
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
+COOKIE_DOMAIN=.myapp.com
+
+# Enable features
+ENABLE_2FA=true
+ENABLE_DEVICE_MGMT=true
+ENABLE_PUSH=true
+ENABLE_ACCOUNT_MGMT=true
+APP_NAME=MyApp
+```
+
+```typescript
+// app.module.ts
+import { HorizonAuthModule } from '@ofeklabs/horizon-auth';
+
+@Module({
+  imports: [
+    HorizonAuthModule.forRoot(), // 👈 No config needed! Uses ENV variables
+  ],
+})
+export class AppModule {}
+```
+
+**See [ENV-CONFIGURATION.md](./ENV-CONFIGURATION.md) for complete ENV reference.**
+
+---
+
+### Option 2: Portfolio SSO Setup
 
 Deploy one auth service, use it across all your projects.
 
@@ -101,7 +143,7 @@ Users sign in once, access all projects.
 
 ---
 
-### Embedded Auth Setup (Alternative)
+### Option 3: Embedded Auth Setup (Code Configuration)
 
 Each application has its own authentication.
 

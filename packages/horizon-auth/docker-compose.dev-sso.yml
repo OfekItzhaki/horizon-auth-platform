@@ -1,0 +1,87 @@
+version: '3.8'
+
+# Dev SSO Mode - Shared authentication service for local development
+# All *.localhost:3000 apps share the same authentication session
+
+services:
+  # Shared PostgreSQL database
+  postgres:
+    image: postgres:14-alpine
+    container_name: horizon-auth-sso-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-horizon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-horizon_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-horizon_auth_sso}
+    volumes:
+      - postgres_sso_data:/var/lib/postgresql/data
+    networks:
+      - horizon-sso
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-horizon}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Shared Redis for token blacklisting
+  redis:
+    image: redis:7-alpine
+    container_name: horizon-auth-sso-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_sso_data:/data
+    networks:
+      - horizon-sso
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Centralized Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: horizon-auth-sso-service
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://horizon:horizon_dev_password@postgres:5432/horizon_auth_sso
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Shared cookie domain for all *.localhost apps
+      COOKIE_DOMAIN: .localhost
+      COOKIE_SECURE: 'false'
+      PORT: 3000
+    volumes:
+      - ./certs:/app/certs:ro
+    networks:
+      - horizon-sso
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/.well-known/jwks.json']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  horizon-sso:
+    driver: bridge
+
+volumes:
+  postgres_sso_data:
+    driver: local
+  redis_sso_data:
+    driver: local

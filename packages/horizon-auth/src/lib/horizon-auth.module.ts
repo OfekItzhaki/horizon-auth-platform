@@ -37,6 +37,19 @@ export class HorizonAuthModule {
       });
     }
 
+    // SSO Mode - only import JWT verification modules
+    if (finalConfig.ssoMode) {
+      return {
+        module: HorizonAuthModule,
+        imports: [
+          AuthModule, // Only for JWT strategy and guards
+        ],
+        providers,
+        exports: ['HORIZON_AUTH_CONFIG', AuthModule],
+      };
+    }
+
+    // Full Mode - import all modules (auth service)
     return {
       module: HorizonAuthModule,
       imports: [
@@ -84,17 +97,36 @@ export class HorizonAuthModule {
    * @param config - Configuration to validate
    */
   private static validateConfig(config: HorizonAuthConfig): void {
-    // Validate required fields
+    // SSO Mode validation
+    if (config.ssoMode) {
+      // In SSO mode, only public key is required
+      if (!config.jwt?.publicKey) {
+        throw new Error('HorizonAuth (SSO Mode): jwt.publicKey is required');
+      }
+
+      if (!config.authServiceUrl) {
+        throw new Error('HorizonAuth (SSO Mode): authServiceUrl is required');
+      }
+
+      // Validate public key format
+      if (!config.jwt.publicKey.includes('BEGIN')) {
+        throw new Error('HorizonAuth: JWT public key must be in PEM format');
+      }
+
+      return; // Skip other validations for SSO mode
+    }
+
+    // Full mode validation (auth service)
     if (!config.database?.url) {
-      throw new Error('HorizonAuth: database.url is required');
+      throw new Error('HorizonAuth: database.url is required (or enable ssoMode)');
     }
 
     if (!config.redis?.host || !config.redis?.port) {
-      throw new Error('HorizonAuth: redis.host and redis.port are required');
+      throw new Error('HorizonAuth: redis.host and redis.port are required (or enable ssoMode)');
     }
 
     if (!config.jwt?.privateKey || !config.jwt?.publicKey) {
-      throw new Error('HorizonAuth: jwt.privateKey and jwt.publicKey are required');
+      throw new Error('HorizonAuth: jwt.privateKey and jwt.publicKey are required (or enable ssoMode with only publicKey)');
     }
 
     // Validate JWT keys format (should be PEM format)
@@ -111,6 +143,7 @@ export class HorizonAuthModule {
   private static applyDefaults(config: HorizonAuthConfig): HorizonAuthConfig {
     return {
       ...config,
+      ssoMode: config.ssoMode || false,
       jwt: {
         ...config.jwt,
         accessTokenExpiry: config.jwt.accessTokenExpiry || '15m',
@@ -118,6 +151,11 @@ export class HorizonAuthModule {
         issuer: config.jwt.issuer || 'horizon-auth',
         audience: config.jwt.audience || 'horizon-api',
         kid: config.jwt.kid || 'horizon-auth-key-1',
+      },
+      cookie: {
+        domain: config.cookie?.domain || config.security?.cookieDomain,
+        secure: config.cookie?.secure ?? config.security?.cookieSecure ?? (process.env.NODE_ENV === 'production'),
+        sameSite: config.cookie?.sameSite || 'lax',
       },
       multiTenant: {
         enabled: config.multiTenant?.enabled || false,

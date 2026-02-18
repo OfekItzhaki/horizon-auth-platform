@@ -1,11 +1,15 @@
 export interface HorizonAuthConfig {
-  // Database configuration
-  database: {
+  // SSO Mode (optional) - for apps that only verify tokens
+  ssoMode?: boolean;
+  authServiceUrl?: string; // URL of the auth service (required if ssoMode is true)
+
+  // Database configuration (required unless ssoMode is true)
+  database?: {
     url: string;
   };
 
-  // Redis configuration
-  redis: {
+  // Redis configuration (required unless ssoMode is true)
+  redis?: {
     host: string;
     port: number;
     password?: string;
@@ -14,13 +18,20 @@ export interface HorizonAuthConfig {
 
   // JWT configuration
   jwt: {
-    privateKey: string; // RSA private key (PEM format)
-    publicKey: string; // RSA public key (PEM format)
+    privateKey?: string; // RSA private key (PEM format) - required for auth service
+    publicKey: string; // RSA public key (PEM format) - required for all apps
     accessTokenExpiry?: string; // Default: '15m'
     refreshTokenExpiry?: string; // Default: '7d'
     issuer?: string; // Default: 'horizon-auth'
     audience?: string; // Default: 'horizon-api'
     kid?: string; // Key ID for JWKS
+  };
+
+  // Cookie configuration (for SSO)
+  cookie?: {
+    domain?: string; // Cookie domain (e.g., '.yourdomain.com')
+    secure?: boolean; // HTTPS only (default: true in production)
+    sameSite?: 'strict' | 'lax' | 'none'; // Default: 'lax'
   };
 
   // Multi-tenant configuration
@@ -49,8 +60,8 @@ export interface HorizonAuthConfig {
   // Security configuration
   security?: {
     bcryptMigration?: boolean; // Enable bcrypt to Argon2id migration
-    cookieSecure?: boolean; // Default: true in production
-    cookieDomain?: string; // For SSO mode
+    cookieSecure?: boolean; // Default: true in production (deprecated - use cookie.secure)
+    cookieDomain?: string; // For SSO mode (deprecated - use cookie.domain)
   };
 
   // Global guards

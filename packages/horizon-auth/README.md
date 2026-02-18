@@ -1,6 +1,22 @@
 # @ofeklabs/horizon-auth
 
-Production-ready NestJS authentication module with 2026 security standards. Add enterprise-grade authentication to your application in under 60 seconds.
+Production-ready NestJS authentication module with 2026 security standards. Deploy once, use everywhere.
+
+## Use Cases
+
+### 1. Portfolio SSO (Recommended)
+Deploy one auth service, use it across all your projects. Users sign in once and access everything.
+
+```
+auth.yourdomain.com (Auth Service)
+    ↓ Shared Authentication
+    ├── project1.yourdomain.com
+    ├── project2.yourdomain.com
+    └── project3.yourdomain.com
+```
+
+### 2. Embedded Auth
+Each application has its own isolated authentication.
 
 ## Features
 
@@ -13,7 +29,73 @@ Production-ready NestJS authentication module with 2026 security standards. Add 
 - 🎯 **Type-Safe**: Full TypeScript support
 - 📦 **Zero Config**: Sensible defaults, fully customizable
 
-## Quick Start (60 seconds)
+## Quick Start
+
+### Portfolio SSO Setup (Recommended)
+
+Deploy one auth service, use it across all your projects.
+
+#### 1. Deploy Auth Service (One Time)
+
+```bash
+# Clone and deploy packages/horizon-auth to auth.yourdomain.com
+npm install
+npm run build
+npm run start:prod
+```
+
+**Environment Variables**:
+```env
+DATABASE_URL=postgresql://...
+REDIS_HOST=your-redis-host
+JWT_PRIVATE_KEY=<your-private-key>
+JWT_PUBLIC_KEY=<your-public-key>
+COOKIE_DOMAIN=.yourdomain.com
+NODE_ENV=production
+```
+
+#### 2. Use in Your Projects
+
+For each project:
+
+```bash
+npm install @ofeklabs/horizon-auth
+```
+
+```typescript
+// app.module.ts
+HorizonAuthModule.forRoot({
+  ssoMode: true,
+  authServiceUrl: process.env.AUTH_SERVICE_URL,
+  jwt: {
+    publicKey: process.env.JWT_PUBLIC_KEY,
+  },
+  cookie: {
+    domain: process.env.COOKIE_DOMAIN,
+    secure: process.env.NODE_ENV === 'production',
+  },
+})
+```
+
+```env
+# .env
+AUTH_SERVICE_URL=https://auth.yourdomain.com
+JWT_PUBLIC_KEY=<paste-public-key>
+COOKIE_DOMAIN=.yourdomain.com
+```
+
+Deploy to:
+- project1.yourdomain.com
+- project2.yourdomain.com
+- project3.yourdomain.com
+
+Users sign in once, access all projects.
+
+---
+
+### Embedded Auth Setup (Alternative)
+
+Each application has its own authentication.
 
 ### 1. Install
 
@@ -332,6 +414,26 @@ AUTH_SERVICE_URL=https://auth.ofeklabs.dev
 ```
 
 ## Production Deployment
+
+### Portfolio SSO Architecture (Recommended)
+
+Perfect for portfolios, demo sites, or related projects.
+
+**Benefits**:
+- One login for all projects
+- Consistent user experience
+- No duplicate auth code
+- Single point of maintenance
+- Professional appearance
+
+**Setup**:
+
+1. Deploy auth service to `auth.yourdomain.com`
+2. Install package in each project
+3. Configure SSO mode with `AUTH_SERVICE_URL`
+4. Deploy projects to subdomains
+
+See [PRODUCTION-DEPLOYMENT.md](./PRODUCTION-DEPLOYMENT.md) for complete guide.
 
 ### Deploy to Render
 

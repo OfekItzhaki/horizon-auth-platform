@@ -50,10 +50,12 @@ import { join } from 'path';
       redis: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT) || 6379,
+        password: process.env.REDIS_PASSWORD,
       },
       jwt: {
-        privateKey: readFileSync(join(__dirname, '../certs/private.pem'), 'utf8'),
-        publicKey: readFileSync(join(__dirname, '../certs/public.pem'), 'utf8'),
+        // For production: use environment variables
+        privateKey: process.env.JWT_PRIVATE_KEY || readFileSync(join(__dirname, '../certs/private.pem'), 'utf8'),
+        publicKey: process.env.JWT_PUBLIC_KEY || readFileSync(join(__dirname, '../certs/public.pem'), 'utf8'),
       },
     }),
   ],
@@ -317,9 +319,115 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=your_redis_password
 
+# JWT Keys (for production - use multiline env vars)
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----"
+JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIIB...\n-----END PUBLIC KEY-----"
+
 # Application
 NODE_ENV=production
+PORT=3000
+
+# Optional: SSO Mode
+AUTH_SERVICE_URL=https://auth.ofeklabs.dev
 ```
+
+## Production Deployment
+
+### Deploy to Render
+
+#### 1. Deploy Auth Service
+
+Create a new Web Service on Render:
+
+**Environment Variables**:
+```env
+DATABASE_URL=<your-postgres-url>
+REDIS_HOST=<your-redis-host>
+REDIS_PORT=6379
+REDIS_PASSWORD=<your-redis-password>
+JWT_PRIVATE_KEY=<paste-private-key-with-\n>
+JWT_PUBLIC_KEY=<paste-public-key-with-\n>
+NODE_ENV=production
+COOKIE_DOMAIN=.ofeklabs.dev
+COOKIE_SECURE=true
+```
+
+**Build Command**: `npm install && npm run build`
+
+**Start Command**: `npm run start:prod`
+
+#### 2. Deploy Your Apps (SSO Mode)
+
+For each app (tasks, CRM, analytics):
+
+```typescript
+// app.module.ts
+HorizonAuthModule.forRoot({
+  ssoMode: true,
+  authServiceUrl: process.env.AUTH_SERVICE_URL || 'https://auth.ofeklabs.dev',
+  jwt: {
+    publicKey: process.env.JWT_PUBLIC_KEY,
+  },
+  cookie: {
+    domain: process.env.COOKIE_DOMAIN || '.ofeklabs.dev',
+    secure: process.env.NODE_ENV === 'production',
+  },
+})
+```
+
+**Environment Variables**:
+```env
+AUTH_SERVICE_URL=https://auth.ofeklabs.dev
+JWT_PUBLIC_KEY=<paste-public-key-with-\n>
+COOKIE_DOMAIN=.ofeklabs.dev
+NODE_ENV=production
+```
+
+#### 3. Configure Custom Domains
+
+On Render, add custom domains:
+- Auth service: `auth.ofeklabs.dev`
+- Tasks app: `tasks.ofeklabs.dev`
+- CRM app: `crm.ofeklabs.dev`
+
+All apps will share authentication via cookies! 🎉
+
+### Deploy to AWS/Docker
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["node", "dist/main"]
+```
+
+```bash
+# Build and run
+docker build -t horizon-auth .
+docker run -p 3000:3000 \
+  -e DATABASE_URL="postgresql://..." \
+  -e REDIS_HOST="redis" \
+  -e JWT_PRIVATE_KEY="$(cat certs/private.pem)" \
+  -e JWT_PUBLIC_KEY="$(cat certs/public.pem)" \
+  horizon-auth
+```
+
+### Environment Variable Best Practices
+
+1. **Never commit keys to Git**
+2. **Use secrets manager** (AWS Secrets Manager, Render Secrets)
+3. **Rotate keys periodically**
+4. **Use different keys** for dev/staging/production
+5. **Store keys as multiline strings** with `\n` for newlines
 
 ## Troubleshooting
 

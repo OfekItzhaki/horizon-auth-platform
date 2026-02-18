@@ -388,7 +388,7 @@ This implementation plan breaks down the enterprise authentication features into
   - _Requirements: 2.1, 2.3, 2.5_
 
 - [ ] 16. Error handling and validation
-  - [ ] 16.1 Create custom exception classes
+  - [x] 16.1 Create custom exception classes
     - Create AccountDeactivatedException
     - Create TwoFactorRequiredException
     - Create InvalidTwoFactorCodeException

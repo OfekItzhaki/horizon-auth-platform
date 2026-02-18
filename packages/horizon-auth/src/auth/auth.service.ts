@@ -6,6 +6,7 @@ import { RedisService } from '../redis/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwoFactorService } from '../two-factor/two-factor.service';
 import { DeviceService } from '../devices/device.service';
+import { AccountDeactivatedException } from '../common/exceptions';
 
 export interface AuthResult {
   user: SafeUser;
@@ -106,7 +107,7 @@ export class AuthService {
 
     // Check if account is active
     if (!user.isActive) {
-      throw new UnauthorizedException('Account is deactivated');
+      throw new AccountDeactivatedException(user.deactivationReason || undefined);
     }
 
     // Verify password

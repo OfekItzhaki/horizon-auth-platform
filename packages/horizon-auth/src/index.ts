@@ -30,3 +30,6 @@ export * from './account/dto';
 export * from './social-auth/social-auth.service';
 export * from './social-auth/social-auth.module';
 export * from './social-auth/dto';
+
+// Custom exceptions
+export * from './common/exceptions';

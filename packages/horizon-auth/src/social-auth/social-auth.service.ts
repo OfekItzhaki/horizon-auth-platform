@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { TokenService } from '../auth/services/token.service';
+import { SocialAccountAlreadyLinkedException } from '../common/exceptions';
 
 export interface SocialProfile {
   provider: 'google' | 'facebook';
@@ -93,7 +94,7 @@ export class SocialAuthService {
     });
 
     if (existingLink && existingLink.userId !== userId) {
-      throw new UnauthorizedException('This social account is already linked to another user');
+      throw new SocialAccountAlreadyLinkedException(provider);
     }
 
     if (existingLink) {

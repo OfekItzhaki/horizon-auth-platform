@@ -27,7 +27,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.4.2",
-    "@ofeklabs/horizon-auth": "^0.2.0",
+    "@ofeklabs/horizon-auth": "file:../packages/horizon-auth",
     "@prisma/client": "^5.7.0",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",

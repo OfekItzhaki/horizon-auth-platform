@@ -55,7 +55,7 @@ export class HorizonAuthModule {
       imports: [
         PrismaModule.forRoot(finalConfig),
         RedisModule.forRoot(finalConfig),
-        AuthModule.forFullMode(), // Full auth service with all features
+        AuthModule.forFullMode(finalConfig), // Pass config for conditional feature registration
         UsersModule,
       ],
       providers,

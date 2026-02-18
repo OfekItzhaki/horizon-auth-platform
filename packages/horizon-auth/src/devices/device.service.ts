@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { createHash } from 'crypto';
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 
 export interface DeviceInfo {
   userAgent: string;
@@ -21,7 +21,10 @@ export interface DeviceResponse {
 
 @Injectable()
 export class DeviceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private pushTokenService?: any, // Optional injection to avoid circular dependency
+  ) {}
 
   /**
    * Generate a deterministic fingerprint from user agent
@@ -164,8 +167,10 @@ export class DeviceService {
       },
     });
 
-    // Note: Push tokens will be revoked by PushTokenService
-    // This will be integrated later
+    // Revoke push tokens if PushTokenService is available
+    if (this.pushTokenService) {
+      await this.pushTokenService.revokeDevicePushTokens(deviceId);
+    }
   }
 
   /**

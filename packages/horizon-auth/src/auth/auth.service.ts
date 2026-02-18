@@ -1,14 +1,21 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Inject, Optional } from '@nestjs/common';
 import { UsersService, SafeUser } from '../users/users.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { RedisService } from '../redis/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TwoFactorService } from '../two-factor/two-factor.service';
+import { DeviceService } from '../devices/device.service';
 
 export interface AuthResult {
   user: SafeUser;
   accessToken: string;
   refreshToken: string;
+}
+
+export interface TwoFactorRequiredResult {
+  requiresTwoFactor: true;
+  userId: string;
 }
 
 @Injectable()
@@ -19,6 +26,8 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
     private readonly prisma: PrismaService,
+    private readonly twoFactorService: TwoFactorService,
+    @Optional() private readonly deviceService?: DeviceService,
   ) {}
 
   /**
@@ -81,19 +90,50 @@ export class AuthService {
    * Authenticate user with email and password
    * @param email - User email
    * @param password - User password
-   * @returns User and tokens
+   * @param deviceInfo - Optional device information (userAgent, ip, deviceName)
+   * @returns User and tokens, or 2FA required response
    */
-  async login(email: string, password: string): Promise<AuthResult> {
+  async login(
+    email: string,
+    password: string,
+    deviceInfo?: { userAgent?: string; ip?: string; deviceName?: string },
+  ): Promise<AuthResult | TwoFactorRequiredResult> {
     // Find user by email
     const user = await this.usersService.findByEmail(email);
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check if account is active
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
     // Verify password
     const isPasswordValid = await this.passwordService.verify(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if 2FA is enabled
+    const has2FA = await this.twoFactorService.isTwoFactorEnabled(user.id);
+    if (has2FA) {
+      // Return intermediate response requiring 2FA
+      return {
+        requiresTwoFactor: true,
+        userId: user.id,
+      };
+    }
+
+    // Track device if device management is enabled
+    let deviceId: string | undefined;
+    if (this.deviceService && deviceInfo) {
+      const device = await this.deviceService.createOrUpdateDevice(user.id, {
+        userAgent: deviceInfo.userAgent || '',
+        ip: deviceInfo.ip,
+        deviceName: deviceInfo.deviceName,
+      });
+      deviceId = device.id;
     }
 
     // Generate tokens
@@ -107,13 +147,86 @@ export class AuthService {
     const { token: refreshToken, jti } = this.tokenService.generateRefreshTokenJWT(user.id);
     const hashedToken = this.tokenService.hashToken(refreshToken);
 
-    // Store refresh token in database
+    // Store refresh token in database with device association
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await this.prisma.refreshToken.create({
       data: {
         hashedToken,
         userId: user.id,
         expiresAt,
+        deviceId, // Associate with device if available
+      },
+    });
+
+    return {
+      user: this.usersService.toSafeUser(user),
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  /**
+   * Verify 2FA code and complete login
+   * @param userId - User ID from initial login
+   * @param code - TOTP code or backup code
+   * @param deviceInfo - Optional device information (userAgent, ip, deviceName)
+   * @returns User and tokens
+   */
+  async verifyTwoFactorLogin(
+    userId: string,
+    code: string,
+    deviceInfo?: { userAgent?: string; ip?: string; deviceName?: string },
+  ): Promise<AuthResult> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Invalid user');
+    }
+
+    // Try TOTP first (6 digits)
+    let isValid = false;
+    if (code.length === 6) {
+      isValid = await this.twoFactorService.verifyTotpCode(userId, code);
+    }
+
+    // Try backup code if TOTP failed (8-9 chars with optional dash)
+    if (!isValid && code.length >= 8) {
+      isValid = await this.twoFactorService.verifyBackupCode(userId, code);
+    }
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid 2FA code');
+    }
+
+    // Track device if device management is enabled
+    let deviceId: string | undefined;
+    if (this.deviceService && deviceInfo) {
+      const device = await this.deviceService.createOrUpdateDevice(userId, {
+        userAgent: deviceInfo.userAgent || '',
+        ip: deviceInfo.ip,
+        deviceName: deviceInfo.deviceName,
+      });
+      deviceId = device.id;
+    }
+
+    // Generate tokens
+    const accessToken = this.tokenService.generateAccessToken({
+      sub: user.id,
+      email: user.email,
+      tenantId: user.tenantId,
+      roles: user.roles,
+    });
+
+    const { token: refreshToken, jti } = this.tokenService.generateRefreshTokenJWT(user.id);
+    const hashedToken = this.tokenService.hashToken(refreshToken);
+
+    // Store refresh token in database with device association
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    await this.prisma.refreshToken.create({
+      data: {
+        hashedToken,
+        userId: user.id,
+        expiresAt,
+        deviceId, // Associate with device if available
       },
     });
 
@@ -187,8 +300,14 @@ export class AuthService {
         userId: user.id,
         expiresAt: newExpiresAt,
         parentTokenId: tokenRecord.id,
+        deviceId: tokenRecord.deviceId, // Preserve device association
       },
     });
+
+    // Update device lastActiveAt if device management is enabled
+    if (this.deviceService && tokenRecord.deviceId) {
+      await this.deviceService.updateLastActive(tokenRecord.deviceId);
+    }
 
     return {
       user: this.usersService.toSafeUser(user),

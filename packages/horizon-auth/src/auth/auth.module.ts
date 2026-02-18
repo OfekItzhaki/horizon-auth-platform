@@ -15,6 +15,12 @@ import { RolesGuard } from './guards/roles.guard';
 import { UsersModule } from '../users/users.module';
 import { RedisModule } from '../redis/redis.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { TwoFactorModule } from '../two-factor/two-factor.module';
+import { DeviceModule } from '../devices/device.module';
+import { PushTokenModule } from '../push-tokens/push-token.module';
+import { AccountModule } from '../account/account.module';
+import { SocialAuthModule } from '../social-auth/social-auth.module';
+import { HorizonAuthConfig } from '../lib/horizon-auth-config.interface';
 
 @Module({})
 export class AuthModule {
@@ -41,22 +47,47 @@ export class AuthModule {
   /**
    * Configure AuthModule for full mode (auth service with all features)
    */
-  static forFullMode(): DynamicModule {
+  static forFullMode(config?: HorizonAuthConfig): DynamicModule {
+    const imports: any[] = [
+      PassportModule,
+      JwtModule.register({}),
+      ThrottlerModule.forRoot([
+        {
+          ttl: 60000, // 60 seconds
+          limit: 10, // Default limit
+        },
+      ]),
+      UsersModule,
+      RedisModule,
+      PrismaModule,
+    ];
+
+    // Conditionally add feature modules based on configuration
+    const features = config?.features;
+
+    if (features?.twoFactor?.enabled) {
+      imports.push(TwoFactorModule);
+    }
+
+    if (features?.deviceManagement?.enabled) {
+      imports.push(DeviceModule);
+    }
+
+    if (features?.pushNotifications?.enabled) {
+      imports.push(PushTokenModule);
+    }
+
+    if (features?.accountManagement?.enabled) {
+      imports.push(AccountModule);
+    }
+
+    if (features?.socialLogin?.google || features?.socialLogin?.facebook) {
+      imports.push(SocialAuthModule);
+    }
+
     return {
       module: AuthModule,
-      imports: [
-        PassportModule,
-        JwtModule.register({}),
-        ThrottlerModule.forRoot([
-          {
-            ttl: 60000, // 60 seconds
-            limit: 10, // Default limit
-          },
-        ]),
-        UsersModule,
-        RedisModule,
-        PrismaModule,
-      ],
+      imports,
       controllers: [AuthController, JwksController],
       providers: [
         Reflector,

@@ -113,20 +113,20 @@ This implementation plan breaks down the enterprise authentication features into
     - **Property 4: Social account data round-trip**
     - **Validates: Requirements 1.7**
   
-  - [ ] 5.7 Create Passport strategies
+  - [x] 5.7 Create Passport strategies
     - Create GoogleStrategy extending PassportStrategy
     - Create FacebookStrategy extending PassportStrategy
     - Configure OAuth scopes and callback URLs
     - Integrate with SocialAuthService
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
   
-  - [ ] 5.8 Create social login DTOs
+  - [x] 5.8 Create social login DTOs
     - Create GoogleCallbackDto with code field
     - Create FacebookCallbackDto with code field
     - Add validation decorators
     - _Requirements: 8.1, 8.2, 8.14_
   
-  - [ ] 5.9 Add social login endpoints to AuthController
+  - [x] 5.9 Add social login endpoints to AuthController
     - Add POST /auth/social/google endpoint
     - Add POST /auth/social/facebook endpoint
     - Integrate SocialAuthService methods
@@ -144,7 +144,7 @@ This implementation plan breaks down the enterprise authentication features into
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Push notification token management
-  - [ ] 7.1 Create PushTokenService
+  - [x] 7.1 Create PushTokenService
     - Implement registerPushToken method
     - Implement updatePushToken method
     - Implement revokePushToken method
@@ -172,18 +172,18 @@ This implementation plan breaks down the enterprise authentication features into
     - **Property 14: Push token revocation marks inactive**
     - **Validates: Requirements 3.7**
   
-  - [ ] 7.7 Create push token DTOs
+  - [x] 7.7 Create push token DTOs
     - Create RegisterPushTokenDto with token, tokenType, and optional deviceId
     - Add validation decorators and enum validation
     - _Requirements: 8.5, 8.14_
   
-  - [ ] 7.8 Add push token endpoints to AuthController
+  - [x] 7.8 Add push token endpoints to AuthController
     - Add POST /auth/push-tokens endpoint with JWT guard
     - Add DELETE /auth/push-tokens/:tokenId endpoint with JWT guard
     - Integrate PushTokenService methods
     - _Requirements: 8.5, 8.6, 8.14, 8.15_
   
-  - [ ] 7.9 Update DeviceService to call PushTokenService on device revocation
+  - [x] 7.9 Update DeviceService to call PushTokenService on device revocation
     - Integrate revokeDevicePushTokens in revokeDevice method
     - _Requirements: 3.5_
   
@@ -197,12 +197,12 @@ This implementation plan breaks down the enterprise authentication features into
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Two-factor authentication implementation
-  - [ ] 9.1 Install required dependencies
+  - [x] 9.1 Install required dependencies
     - Install otplib for TOTP generation
     - Install qrcode for QR code generation
     - _Requirements: 4.1, 4.2_
   
-  - [ ] 9.2 Create TwoFactorService
+  - [x] 9.2 Create TwoFactorService
     - Implement generateTotpSecret method with QR code generation
     - Implement verifyTotpSetup method
     - Implement enableTwoFactor method with backup code generation
@@ -241,7 +241,7 @@ This implementation plan breaks down the enterprise authentication features into
     - **Property 21: Backup code regeneration invalidates old codes**
     - **Validates: Requirements 4.10**
   
-  - [ ] 9.10 Create 2FA DTOs
+  - [x] 9.10 Create 2FA DTOs
     - Create EnableTwoFactorDto (empty)
     - Create VerifyTwoFactorSetupDto with 6-digit code
     - Create VerifyTwoFactorLoginDto with code (6-8 chars)
@@ -250,13 +250,13 @@ This implementation plan breaks down the enterprise authentication features into
     - Add validation decorators
     - _Requirements: 8.7, 8.8, 8.9, 8.10, 8.14_
   
-  - [ ] 9.11 Update AuthService to integrate 2FA verification
+  - [x] 9.11 Update AuthService to integrate 2FA verification
     - Modify login method to check if user has 2FA enabled
     - Return intermediate response requiring 2FA if enabled
     - Create verifyTwoFactorLogin method
     - _Requirements: 4.5, 4.6, 4.7_
   
-  - [ ] 9.12 Add 2FA endpoints to AuthController
+  - [x] 9.12 Add 2FA endpoints to AuthController
     - Add POST /auth/2fa/enable endpoint with JWT guard
     - Add POST /auth/2fa/verify endpoint with JWT guard
     - Add POST /auth/2fa/disable endpoint with JWT guard
@@ -276,7 +276,7 @@ This implementation plan breaks down the enterprise authentication features into
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Account management implementation
-  - [ ] 11.1 Create AccountService
+  - [x] 11.1 Create AccountService
     - Implement deactivateAccount method with token revocation
     - Implement reactivateAccount method
     - Implement deleteAccount method with cascade deletion
@@ -307,17 +307,17 @@ This implementation plan breaks down the enterprise authentication features into
     - **Property 27: Account deletion confirmation**
     - **Validates: Requirements 5.8**
   
-  - [ ] 11.8 Update AuthService to check account active status
+  - [x] 11.8 Update AuthService to check account active status
     - Modify login method to check isActive field
     - Return appropriate error if account is deactivated
     - _Requirements: 5.2_
   
-  - [ ] 11.9 Create account management DTOs
+  - [x] 11.9 Create account management DTOs
     - Create DeactivateAccountDto with optional reason field
     - Add validation decorators
     - _Requirements: 8.11, 8.14_
   
-  - [ ] 11.10 Add account management endpoints to AuthController
+  - [x] 11.10 Add account management endpoints to AuthController
     - Add POST /auth/account/deactivate endpoint with JWT guard
     - Add POST /auth/account/reactivate endpoint with JWT guard
     - Add DELETE /auth/account endpoint with JWT guard
@@ -335,7 +335,7 @@ This implementation plan breaks down the enterprise authentication features into
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. Feature configuration and conditional registration
-  - [ ] 13.1 Update AuthModule to conditionally register services
+  - [x] 13.1 Update AuthModule to conditionally register services
     - Check features configuration in module initialization
     - Only register SocialAuthService if social login is enabled
     - Only register DeviceService if device management is enabled
@@ -381,7 +381,7 @@ This implementation plan breaks down the enterprise authentication features into
     - Test existing password reset flow
     - _Requirements: 9.2, 9.4_
 
-- [ ] 15. Update AuthService to integrate device tracking
+- [x] 15. Update AuthService to integrate device tracking
   - Modify login method to create/update device on successful authentication
   - Associate refresh tokens with device IDs
   - Update token refresh logic to update device lastActiveAt

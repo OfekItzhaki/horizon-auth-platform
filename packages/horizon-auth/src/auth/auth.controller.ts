@@ -21,10 +21,27 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { SafeUser } from '../users/users.service';
+import { TwoFactorService } from '../two-factor/two-factor.service';
+import { VerifyTwoFactorSetupDto } from '../two-factor/dto/verify-two-factor-setup.dto';
+import { VerifyTwoFactorLoginDto } from '../two-factor/dto/verify-two-factor-login.dto';
+import { AccountService } from '../account/account.service';
+import { DeactivateAccountDto } from '../account/dto/deactivate-account.dto';
+import { SocialAuthService } from '../social-auth/social-auth.service';
+import { GoogleCallbackDto, FacebookCallbackDto } from '../social-auth/dto';
+import { PushTokenService } from '../push-tokens/push-token.service';
+import { RegisterPushTokenDto } from '../push-tokens/dto/register-push-token.dto';
+import { DeviceService } from '../devices/device.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly twoFactorService: TwoFactorService,
+    private readonly accountService: AccountService,
+    private readonly socialAuthService: SocialAuthService,
+    private readonly pushTokenService: PushTokenService,
+    private readonly deviceService: DeviceService,
+  ) {}
 
   /**
    * Register a new user
@@ -66,9 +83,24 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.login(loginDto.email, loginDto.password);
+    // Extract device information from request
+    const deviceInfo = {
+      userAgent: request.headers['user-agent'],
+      ip: request.ip || request.socket.remoteAddress,
+    };
+
+    const result = await this.authService.login(loginDto.email, loginDto.password, deviceInfo);
+
+    // Check if 2FA is required
+    if ('requiresTwoFactor' in result) {
+      return {
+        requiresTwoFactor: true,
+        userId: result.userId,
+      };
+    }
 
     // Set refresh token as HTTP-only cookie
     this.setRefreshTokenCookie(response, result.refreshToken);
@@ -178,15 +210,178 @@ export class AuthController {
   }
 
   /**
+   * Verify 2FA code and complete login
+   * POST /auth/2fa/verify-login
+   * Rate limit: 5 requests per minute
+   */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('2fa/verify-login')
+  @HttpCode(HttpStatus.OK)
+  async verifyTwoFactorLogin(
+    @Body() dto: { userId: string; code: string },
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // Extract device information from request
+    const deviceInfo = {
+      userAgent: request.headers['user-agent'],
+      ip: request.ip || request.socket.remoteAddress,
+    };
+
+    const result = await this.authService.verifyTwoFactorLogin(dto.userId, dto.code, deviceInfo);
+
+    // Set refresh token as HTTP-only cookie
+    this.setRefreshTokenCookie(response, result.refreshToken);
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    };
+  }
+
+  /**
+   * Enable 2FA - Generate TOTP secret and QR code
+   * POST /auth/2fa/enable
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/enable')
+  @HttpCode(HttpStatus.OK)
+  async enableTwoFactor(@CurrentUser() user: SafeUser) {
+    const result = await this.twoFactorService.generateTotpSecret(user.id);
+    return result;
+  }
+
+  /**
+   * Verify TOTP code during setup and enable 2FA
+   * POST /auth/2fa/verify
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyTwoFactorSetup(
+    @CurrentUser() user: SafeUser,
+    @Body() dto: VerifyTwoFactorSetupDto,
+  ) {
+    const isValid = await this.twoFactorService.verifyTotpSetup(user.id, dto.code);
+    if (!isValid) {
+      throw new Error('Invalid 2FA code');
+    }
+
+    const result = await this.twoFactorService.enableTwoFactor(user.id);
+    return result;
+  }
+
+  /**
+   * Disable 2FA
+   * POST /auth/2fa/disable
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  @HttpCode(HttpStatus.OK)
+  async disableTwoFactor(@CurrentUser() user: SafeUser) {
+    await this.twoFactorService.disableTwoFactor(user.id);
+    return { message: '2FA disabled successfully' };
+  }
+
+  /**
+   * Regenerate backup codes
+   * POST /auth/2fa/backup-codes/regenerate
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/backup-codes/regenerate')
+  @HttpCode(HttpStatus.OK)
+  async regenerateBackupCodes(@CurrentUser() user: SafeUser) {
+    const backupCodes = await this.twoFactorService.regenerateBackupCodes(user.id);
+    return { backupCodes };
+  }
+
+  /**
+   * Google OAuth callback
+   * POST /auth/social/google
+   * Rate limit: 5 requests per minute
+   */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('social/google')
+  @HttpCode(HttpStatus.OK)
+  async googleCallback(
+    @Body() dto: GoogleCallbackDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // In a real implementation, you would exchange the code for tokens
+    // and get the user profile from Google
+    // For now, this is a placeholder that expects the frontend to handle OAuth
+    throw new Error('Google OAuth not fully implemented - requires OAuth code exchange');
+  }
+
+  /**
+   * Facebook OAuth callback
+   * POST /auth/social/facebook
+   * Rate limit: 5 requests per minute
+   */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('social/facebook')
+  @HttpCode(HttpStatus.OK)
+  async facebookCallback(
+    @Body() dto: FacebookCallbackDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // In a real implementation, you would exchange the code for tokens
+    // and get the user profile from Facebook
+    // For now, this is a placeholder that expects the frontend to handle OAuth
+    throw new Error('Facebook OAuth not fully implemented - requires OAuth code exchange');
+  }
+
+  /**
+   * Register push notification token
+   * POST /auth/push-tokens
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('push-tokens')
+  @HttpCode(HttpStatus.CREATED)
+  async registerPushToken(
+    @CurrentUser() user: SafeUser,
+    @Body() dto: RegisterPushTokenDto,
+  ) {
+    if (!dto.deviceId) {
+      throw new Error('Device ID is required');
+    }
+
+    const pushToken = await this.pushTokenService.registerPushToken({
+      userId: user.id,
+      token: dto.token,
+      tokenType: dto.tokenType,
+      deviceId: dto.deviceId,
+    });
+    return pushToken;
+  }
+
+  /**
+   * Revoke push notification token
+   * DELETE /auth/push-tokens/:tokenId
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete('push-tokens/:tokenId')
+  @HttpCode(HttpStatus.OK)
+  async revokePushToken(
+    @CurrentUser() user: SafeUser,
+    @Param('tokenId') tokenId: string,
+  ) {
+    await this.pushTokenService.revokePushToken(tokenId);
+    return { message: 'Push token revoked successfully' };
+  }
+
+  /**
    * Get user's active devices
    * GET /auth/devices
    */
   @UseGuards(JwtAuthGuard)
   @Get('devices')
   async getDevices(@CurrentUser() user: SafeUser, @Req() request: Request) {
-    // This will be implemented when DeviceService is integrated
-    // For now, return empty array
-    return [];
+    const devices = await this.deviceService.getUserDevices(user.id);
+    return devices;
   }
 
   /**
@@ -200,8 +395,76 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
     @Param('deviceId') deviceId: string,
   ) {
-    // This will be implemented when DeviceService is integrated
+    await this.deviceService.revokeDevice(deviceId, user.id);
     return { message: 'Device revoked successfully' };
+  }
+
+  /**
+   * Deactivate user account
+   * POST /auth/account/deactivate
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('account/deactivate')
+  @HttpCode(HttpStatus.OK)
+  async deactivateAccount(
+    @CurrentUser() user: SafeUser,
+    @Body() dto: DeactivateAccountDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.accountService.deactivateAccount(user.id, dto.reason);
+
+    // Clear refresh token cookie
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return { message: 'Account deactivated successfully' };
+  }
+
+  /**
+   * Reactivate user account
+   * POST /auth/account/reactivate
+   */
+  @Public()
+  @Post('account/reactivate')
+  @HttpCode(HttpStatus.OK)
+  async reactivateAccount(@Body() dto: { email: string; password: string }) {
+    // Verify credentials first
+    const result = await this.authService.login(dto.email, dto.password);
+    
+    if ('requiresTwoFactor' in result) {
+      throw new Error('Please complete 2FA verification first');
+    }
+
+    // Reactivate account
+    await this.accountService.reactivateAccount(result.user.id);
+
+    return { message: 'Account reactivated successfully' };
+  }
+
+  /**
+   * Delete user account permanently
+   * DELETE /auth/account
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  async deleteAccount(
+    @CurrentUser() user: SafeUser,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.accountService.deleteAccount(user.id);
+
+    // Clear refresh token cookie
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return { message: 'Account deleted successfully' };
   }
 
   /**

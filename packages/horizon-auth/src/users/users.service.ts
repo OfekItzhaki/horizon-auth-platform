@@ -36,13 +36,13 @@ export class UsersService {
   /**
    * Create a new user
    * @param email - User email
-   * @param passwordHash - Hashed password
+   * @param passwordHash - Hashed password (null for social login only users)
    * @param tenantId - Optional tenant ID
    * @returns Created user
    */
   async create(
     email: string,
-    passwordHash: string,
+    passwordHash: string | null,
     tenantId?: string,
   ): Promise<User> {
     // Check if user already exists

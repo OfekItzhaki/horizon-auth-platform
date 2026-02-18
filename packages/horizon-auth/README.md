@@ -912,7 +912,12 @@ Make sure you've set `JWT_PRIVATE_KEY` when running in full mode (auth service).
 
 ## 📦 What's New
 
-### v0.4.0 (Latest)
+### v0.4.1 (Latest)
+- 📝 **Cross-platform integration guide** - Complete examples for .NET, Python, Go, Java, PHP
+- 📝 Enhanced README with cross-platform support section
+- 🌐 JWKS endpoint documentation for polyglot architectures
+
+### v0.4.0
 - ✨ **ENV-based configuration** - Zero code changes needed!
 - ✨ **Flexible deployment** - Same package for embedded and SSO modes
 - 📝 Complete ENV variable documentation

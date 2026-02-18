@@ -31,7 +31,7 @@ This implementation plan breaks down the enterprise authentication features into
     - _Requirements: 6.2, 6.8_
 
 - [ ] 3. Device management implementation
-  - [ ] 3.1 Create DeviceService with core methods
+  - [x] 3.1 Create DeviceService with core methods
     - Implement device fingerprint generation using crypto hash
     - Implement device information extraction from User-Agent using ua-parser-js
     - Implement createOrUpdateDevice method
@@ -60,13 +60,13 @@ This implementation plan breaks down the enterprise authentication features into
     - **Property 9: Revoked device token refresh fails**
     - **Validates: Requirements 2.7**
   
-  - [ ] 3.7 Create device management DTOs
+  - [x] 3.7 Create device management DTOs
     - Create DeviceInfoDto for optional device name
     - Create DeviceResponseDto with all device fields
     - Add validation decorators
     - _Requirements: 8.3, 8.4_
   
-  - [ ] 3.8 Add device management endpoints to AuthController
+  - [x] 3.8 Add device management endpoints to AuthController
     - Add GET /auth/devices endpoint with JWT guard
     - Add DELETE /auth/devices/:deviceId endpoint with JWT guard
     - Integrate DeviceService methods

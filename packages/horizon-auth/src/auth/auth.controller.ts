@@ -2,9 +2,11 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Res,
   Req,
+  Param,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -173,6 +175,33 @@ export class AuthController {
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     await this.authService.verifyEmail(dto.token);
     return { message: 'Email verified successfully' };
+  }
+
+  /**
+   * Get user's active devices
+   * GET /auth/devices
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('devices')
+  async getDevices(@CurrentUser() user: SafeUser, @Req() request: Request) {
+    // This will be implemented when DeviceService is integrated
+    // For now, return empty array
+    return [];
+  }
+
+  /**
+   * Revoke a specific device
+   * DELETE /auth/devices/:deviceId
+   */
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('devices/:deviceId/revoke')
+  async revokeDevice(
+    @CurrentUser() user: SafeUser,
+    @Param('deviceId') deviceId: string,
+  ) {
+    // This will be implemented when DeviceService is integrated
+    return { message: 'Device revoked successfully' };
   }
 
   /**

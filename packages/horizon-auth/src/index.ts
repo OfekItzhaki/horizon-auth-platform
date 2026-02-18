@@ -13,3 +13,23 @@ export * from './users/users.service';
 export * from './auth/dto/register.dto';
 export * from './auth/dto/login.dto';
 export * from './auth/dto/password-reset.dto';
+
+// Enhanced authentication features
+export * from './two-factor/two-factor.service';
+export * from './two-factor/two-factor.module';
+export * from './two-factor/dto';
+export * from './devices/device.service';
+export * from './devices/device.module';
+export * from './devices/dto';
+export * from './push-tokens/push-token.service';
+export * from './push-tokens/push-token.module';
+export * from './push-tokens/dto';
+export * from './account/account.service';
+export * from './account/account.module';
+export * from './account/dto';
+export * from './social-auth/social-auth.service';
+export * from './social-auth/social-auth.module';
+export * from './social-auth/dto';
+
+// Custom exceptions
+export * from './common/exceptions';

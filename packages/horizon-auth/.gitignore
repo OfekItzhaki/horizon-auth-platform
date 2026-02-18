@@ -44,3 +44,6 @@ prisma/migrations/
 *.key
 certs/
 keys/
+
+# Development documentation (internal use only)
+.dev-docs/

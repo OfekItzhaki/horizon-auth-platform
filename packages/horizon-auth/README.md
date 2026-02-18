@@ -777,6 +777,21 @@ docker run -p 3000:3000 \
 - Social login (requires OAuth credentials from Google/Facebook)
 - Backup codes usage during login
 
+## 🌐 Cross-Platform Support
+
+**Works with ANY backend language!** Your auth service issues JWT tokens that can be verified by:
+- ✅ NestJS (use package in SSO mode)
+- ✅ .NET / C# (JWT Bearer Auth)
+- ✅ Python (PyJWT)
+- ✅ Go (golang-jwt)
+- ✅ Java / Spring Boot (OAuth2 Resource Server)
+- ✅ PHP (Firebase JWT)
+- ✅ Any language with JWT support!
+
+**📖 See [CROSS-PLATFORM-INTEGRATION.md](https://github.com/OfekItzhaki/horizon-auth-platform/blob/main/CROSS-PLATFORM-INTEGRATION.md) for complete integration guides with code examples.**
+
+---
+
 ## 🌐 Cross-Language Token Verification
 
 Your other services (in any language) can verify tokens using the JWKS endpoint:
@@ -870,6 +885,7 @@ Make sure you've set `JWT_PRIVATE_KEY` when running in full mode (auth service).
 
 - **[ENV-CONFIGURATION.md](https://github.com/OfekItzhaki/horizon-auth-platform/blob/main/ENV-CONFIGURATION.md)** - Complete environment variable reference
 - **[DEPLOYMENT-EXAMPLES.md](https://github.com/OfekItzhaki/horizon-auth-platform/blob/main/DEPLOYMENT-EXAMPLES.md)** - Real-world deployment scenarios
+- **[CROSS-PLATFORM-INTEGRATION.md](https://github.com/OfekItzhaki/horizon-auth-platform/blob/main/CROSS-PLATFORM-INTEGRATION.md)** - Integration with .NET, Python, Go, Java, PHP
 - **[GitHub Repository](https://github.com/OfekItzhaki/horizon-auth-platform)** - Source code and issues
 
 ---

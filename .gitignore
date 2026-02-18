@@ -3,6 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Build outputs
 dist/
@@ -13,6 +14,7 @@ build/
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # IDE
 .vscode/
@@ -32,6 +34,7 @@ logs/
 # Testing
 coverage/
 .nyc_output/
+*.lcov
 
 # Certificates (keep example, ignore actual keys)
 certs/*.pem
@@ -44,3 +47,11 @@ certs/*.pem
 # Temporary files
 tmp/
 temp/
+.cache/
+
+# Package outputs
+*.tgz
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

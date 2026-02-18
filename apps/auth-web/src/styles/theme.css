@@ -1,0 +1,77 @@
+:root {
+  --bg-app: 250 250 250;
+  --bg-surface: 255 255 255;
+  --bg-elevated: 255 255 255;
+  --bg-hover: 249 250 251;
+  --border-subtle: 229 231 235;
+  --border-strong: 209 213 219;
+  --text-primary: 17 24 39;
+  --text-secondary: 107 114 128;
+  --text-tertiary: 156 163 175;
+  --text-inverse: 255 255 255;
+  --accent-primary: 99 102 241;
+  --accent-secondary: 139 92 246;
+  --accent-success: 16 185 129;
+  --accent-warning: 245 158 11;
+  --accent-danger: 239 68 68;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+[data-theme='dark'] {
+  --bg-app: 10 10 10;
+  --bg-surface: 23 23 23;
+  --bg-elevated: 31 31 31;
+  --bg-hover: 38 38 38;
+  --border-subtle: 38 38 38;
+  --border-strong: 64 64 64;
+  --text-primary: 250 250 250;
+  --text-secondary: 163 163 163;
+  --text-tertiary: 115 115 115;
+  --text-inverse: 10 10 10;
+  --accent-primary: 129 140 248;
+  --accent-secondary: 167 139 250;
+  --accent-success: 52 211 153;
+  --accent-warning: 251 191 36;
+  --accent-danger: 248 113 113;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+}
+
+.premium-card {
+  background-color: rgb(var(--bg-surface));
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-input {
+  background-color: rgb(var(--bg-surface));
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: 0.75rem;
+  color: rgb(var(--text-primary));
+  padding: 0.75rem 1rem;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.premium-input:focus {
+  outline: none;
+  border-color: rgb(var(--accent-primary));
+  box-shadow: 0 0 0 3px rgb(var(--accent-primary) / 0.1);
+}
+
+.premium-button {
+  @apply bg-accent text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 shadow-sm;
+}
+
+.premium-button:hover:not(:disabled) {
+  @apply brightness-95 -translate-y-0.5 shadow-md;
+}

@@ -31,16 +31,17 @@ import { GoogleCallbackDto, FacebookCallbackDto } from '../social-auth/dto';
 import { PushTokenService } from '../push-tokens/push-token.service';
 import { RegisterPushTokenDto } from '../push-tokens/dto/register-push-token.dto';
 import { DeviceService } from '../devices/device.service';
+import { Optional } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly twoFactorService: TwoFactorService,
-    private readonly accountService: AccountService,
-    private readonly socialAuthService: SocialAuthService,
-    private readonly pushTokenService: PushTokenService,
-    private readonly deviceService: DeviceService,
+    @Optional() private readonly twoFactorService?: TwoFactorService,
+    @Optional() private readonly accountService?: AccountService,
+    @Optional() private readonly socialAuthService?: SocialAuthService,
+    @Optional() private readonly pushTokenService?: PushTokenService,
+    @Optional() private readonly deviceService?: DeviceService,
   ) {}
 
   /**
@@ -248,7 +249,10 @@ export class AuthController {
   @Post('2fa/enable')
   @HttpCode(HttpStatus.OK)
   async enableTwoFactor(@CurrentUser() user: SafeUser) {
-    const result = await this.twoFactorService.generateTotpSecret(user.id);
+    if (!this.twoFactorService) {
+      throw new Error('2FA feature is not enabled');
+    }
+    const result = await this.twoFactorService!.generateTotpSecret(user.id);
     return result;
   }
 
@@ -263,12 +267,15 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
     @Body() dto: VerifyTwoFactorSetupDto,
   ) {
-    const isValid = await this.twoFactorService.verifyTotpSetup(user.id, dto.code);
+    if (!this.twoFactorService) {
+      throw new Error('2FA feature is not enabled');
+    }
+    const isValid = await this.twoFactorService!.verifyTotpSetup(user.id, dto.code);
     if (!isValid) {
       throw new Error('Invalid 2FA code');
     }
 
-    const result = await this.twoFactorService.enableTwoFactor(user.id);
+    const result = await this.twoFactorService!.enableTwoFactor(user.id);
     return result;
   }
 
@@ -280,7 +287,10 @@ export class AuthController {
   @Post('2fa/disable')
   @HttpCode(HttpStatus.OK)
   async disableTwoFactor(@CurrentUser() user: SafeUser) {
-    await this.twoFactorService.disableTwoFactor(user.id);
+    if (!this.twoFactorService) {
+      throw new Error('2FA feature is not enabled');
+    }
+    await this.twoFactorService!.disableTwoFactor(user.id);
     return { message: '2FA disabled successfully' };
   }
 
@@ -292,7 +302,10 @@ export class AuthController {
   @Post('2fa/backup-codes/regenerate')
   @HttpCode(HttpStatus.OK)
   async regenerateBackupCodes(@CurrentUser() user: SafeUser) {
-    const backupCodes = await this.twoFactorService.regenerateBackupCodes(user.id);
+    if (!this.twoFactorService) {
+      throw new Error('2FA feature is not enabled');
+    }
+    const backupCodes = await this.twoFactorService!.regenerateBackupCodes(user.id);
     return { backupCodes };
   }
 
@@ -338,25 +351,26 @@ export class AuthController {
    * Register push notification token
    * POST /auth/push-tokens
    */
-  @UseGuards(JwtAuthGuard)
-  @Post('push-tokens')
-  @HttpCode(HttpStatus.CREATED)
   async registerPushToken(
-    @CurrentUser() user: SafeUser,
-    @Body() dto: RegisterPushTokenDto,
-  ) {
-    if (!dto.deviceId) {
-      throw new Error('Device ID is required');
+      @CurrentUser() user: SafeUser,
+      @Body() dto: RegisterPushTokenDto,
+    ) {
+      if (!this.pushTokenService) {
+        throw new Error('Push notifications feature is not enabled');
+      }
+      if (!dto.deviceId) {
+        throw new Error('Device ID is required');
+      }
+
+      const pushToken = await this.pushTokenService!.registerPushToken({
+        userId: user.id,
+        token: dto.token,
+        tokenType: dto.tokenType,
+        deviceId: dto.deviceId,
+      });
+      return pushToken;
     }
 
-    const pushToken = await this.pushTokenService.registerPushToken({
-      userId: user.id,
-      token: dto.token,
-      tokenType: dto.tokenType,
-      deviceId: dto.deviceId,
-    });
-    return pushToken;
-  }
 
   /**
    * Revoke push notification token
@@ -369,7 +383,10 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
     @Param('tokenId') tokenId: string,
   ) {
-    await this.pushTokenService.revokePushToken(tokenId);
+    if (!this.pushTokenService) {
+      throw new Error('Push notifications feature is not enabled');
+    }
+    await this.pushTokenService!.revokePushToken(tokenId);
     return { message: 'Push token revoked successfully' };
   }
 
@@ -380,7 +397,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('devices')
   async getDevices(@CurrentUser() user: SafeUser, @Req() request: Request) {
-    const devices = await this.deviceService.getUserDevices(user.id);
+    if (!this.deviceService) {
+      throw new Error('Device management feature is not enabled');
+    }
+    const devices = await this.deviceService!.getUserDevices(user.id);
     return devices;
   }
 
@@ -395,7 +415,10 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
     @Param('deviceId') deviceId: string,
   ) {
-    await this.deviceService.revokeDevice(deviceId, user.id);
+    if (!this.deviceService) {
+      throw new Error('Device management feature is not enabled');
+    }
+    await this.deviceService!.revokeDevice(user.id, deviceId);
     return { message: 'Device revoked successfully' };
   }
 
@@ -411,7 +434,10 @@ export class AuthController {
     @Body() dto: DeactivateAccountDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    await this.accountService.deactivateAccount(user.id, dto.reason);
+    if (!this.accountService) {
+      throw new Error('Account management feature is not enabled');
+    }
+    await this.accountService!.deactivateAccount(user.id, dto.reason);
 
     // Clear refresh token cookie
     response.clearCookie('refreshToken', {
@@ -431,6 +457,9 @@ export class AuthController {
   @Post('account/reactivate')
   @HttpCode(HttpStatus.OK)
   async reactivateAccount(@Body() dto: { email: string; password: string }) {
+    if (!this.accountService) {
+      throw new Error('Account management feature is not enabled');
+    }
     // Verify credentials first
     const result = await this.authService.login(dto.email, dto.password);
     
@@ -439,7 +468,7 @@ export class AuthController {
     }
 
     // Reactivate account
-    await this.accountService.reactivateAccount(result.user.id);
+    await this.accountService!.reactivateAccount(result.user.id);
 
     return { message: 'Account reactivated successfully' };
   }
@@ -455,7 +484,10 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
     @Res({ passthrough: true }) response: Response,
   ) {
-    await this.accountService.deleteAccount(user.id);
+    if (!this.accountService) {
+      throw new Error('Account management feature is not enabled');
+    }
+    await this.accountService!.deleteAccount(user.id);
 
     // Clear refresh token cookie
     response.clearCookie('refreshToken', {

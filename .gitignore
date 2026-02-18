@@ -59,3 +59,6 @@ vite.config.ts.timestamp-*
 # Personal setup guides
 OFEKLABS-DEV-SSO-SETUP.md
 **/OFEKLABS-*.md
+
+# Development documentation (internal use only)
+.dev-docs/

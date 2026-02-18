@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { createHash } from 'crypto';
 import { UAParser } from 'ua-parser-js';
+import { PushTokenService } from '../push-tokens/push-token.service';
 
 export interface DeviceInfo {
   userAgent: string;
@@ -23,7 +24,7 @@ export interface DeviceResponse {
 export class DeviceService {
   constructor(
     private readonly prisma: PrismaService,
-    private pushTokenService?: any, // Optional injection to avoid circular dependency
+    @Optional() @Inject(forwardRef(() => PushTokenService)) private pushTokenService?: PushTokenService,
   ) {}
 
   /**

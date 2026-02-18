@@ -39,6 +39,22 @@ export class AccountService {
   }
 
   /**
+   * Reactivate account by email (validates user exists and is deactivated)
+   */
+  async reactivateAccountByEmail(email: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.reactivateAccount(user.id);
+    return user.id;
+  }
+
+  /**
    * Delete user account with cascade deletion
    */
   async deleteAccount(userId: string): Promise<void> {

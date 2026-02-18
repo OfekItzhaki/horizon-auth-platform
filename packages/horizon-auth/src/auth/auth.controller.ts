@@ -352,6 +352,9 @@ export class AuthController {
    * Register push notification token
    * POST /auth/push-tokens
    */
+  @UseGuards(JwtAuthGuard)
+  @Post('push-tokens')
+  @HttpCode(HttpStatus.CREATED)
   async registerPushToken(
       @CurrentUser() user: SafeUser,
       @Body() dto: RegisterPushTokenDto,
@@ -461,17 +464,17 @@ export class AuthController {
     if (!this.accountService) {
       throw new FeatureDisabledException('Account management');
     }
-    // Verify credentials first
-    const result = await this.authService.login(dto.email, dto.password);
     
-    if ('requiresTwoFactor' in result) {
-      throw new Error('Please complete 2FA verification first');
-    }
+    // Reactivate account first
+    await this.accountService!.reactivateAccountByEmail(dto.email);
+    
+    // Now login will work
+    const result = await this.authService.login(dto.email, dto.password);
 
-    // Reactivate account
-    await this.accountService!.reactivateAccount(result.user.id);
-
-    return { message: 'Account reactivated successfully' };
+    return {
+      message: 'Account reactivated successfully',
+      ...result,
+    };
   }
 
   /**

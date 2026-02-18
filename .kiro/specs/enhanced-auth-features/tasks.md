@@ -82,13 +82,13 @@ This implementation plan breaks down the enterprise authentication features into
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Social login implementation
-  - [ ] 5.1 Install required dependencies
+  - [x] 5.1 Install required dependencies
     - Install passport-google-oauth20
     - Install passport-facebook
     - Install @nestjs/passport peer dependencies if needed
     - _Requirements: 1.1, 1.3_
   
-  - [ ] 5.2 Create SocialAuthService
+  - [x] 5.2 Create SocialAuthService
     - Implement authenticateWithGoogle method
     - Implement authenticateWithFacebook method
     - Implement linkSocialAccount method

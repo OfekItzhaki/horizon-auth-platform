@@ -68,4 +68,44 @@ export interface HorizonAuthConfig {
   guards?: {
     applyJwtGuardGlobally?: boolean; // Default: false
   };
+
+  // Enhanced authentication features (optional)
+  features?: {
+    // Social login configuration
+    socialLogin?: {
+      google?: {
+        clientId: string;
+        clientSecret: string;
+        callbackUrl: string;
+      };
+      facebook?: {
+        appId: string;
+        appSecret: string;
+        callbackUrl: string;
+      };
+    };
+
+    // Device management configuration
+    deviceManagement?: {
+      enabled: boolean;
+      maxDevicesPerUser?: number; // Optional limit on devices per user
+    };
+
+    // Push notifications configuration
+    pushNotifications?: {
+      enabled: boolean;
+    };
+
+    // Two-factor authentication configuration
+    twoFactor?: {
+      enabled: boolean;
+      issuer?: string; // For TOTP QR codes (e.g., "MyApp")
+    };
+
+    // Account management configuration
+    accountManagement?: {
+      enabled: boolean;
+      allowReactivation?: boolean; // Allow users to reactivate deactivated accounts
+    };
+  };
 }

@@ -16,7 +16,7 @@ This implementation plan breaks down the enterprise authentication features into
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9_
 
 - [ ] 2. Configuration interface extensions
-  - [ ] 2.1 Extend HorizonAuthConfig interface with features configuration
+  - [x] 2.1 Extend HorizonAuthConfig interface with features configuration
     - Add socialLogin configuration (Google and Facebook OAuth credentials)
     - Add deviceManagement configuration
     - Add pushNotifications configuration

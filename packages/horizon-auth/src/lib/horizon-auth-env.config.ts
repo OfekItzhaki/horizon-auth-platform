@@ -66,10 +66,17 @@ export function loadConfigFromEnv(): Partial<HorizonAuthConfig> {
 
   // Validate JWT keys
   if (!isSsoMode && !config.jwt?.privateKey) {
-    throw new Error('JWT_PRIVATE_KEY is required when AUTH_MODE=full');
+    // Only throw if AUTH_MODE is explicitly set to 'full' in ENV
+    // If AUTH_MODE is not set, user might be providing config via code
+    if (process.env.AUTH_MODE === 'full') {
+      throw new Error('JWT_PRIVATE_KEY is required when AUTH_MODE=full');
+    }
   }
   if (!config.jwt?.publicKey) {
-    throw new Error('JWT_PUBLIC_KEY is required');
+    // Only throw if AUTH_MODE is explicitly set
+    if (process.env.AUTH_MODE) {
+      throw new Error('JWT_PUBLIC_KEY is required');
+    }
   }
 
   // Cookie Configuration
@@ -197,7 +204,7 @@ export function mergeWithEnvConfig(userConfig: Partial<HorizonAuthConfig>): Hori
   const envConfig = loadConfigFromEnv();
   
   // Deep merge: user config overrides env config
-  return {
+  const merged = {
     ...envConfig,
     ...userConfig,
     jwt: {
@@ -233,4 +240,6 @@ export function mergeWithEnvConfig(userConfig: Partial<HorizonAuthConfig>): Hori
       },
     },
   } as HorizonAuthConfig;
+  
+  return merged;
 }

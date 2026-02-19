@@ -58,8 +58,8 @@ export class AuthModule {
         },
       ]),
       UsersModule,
-      RedisModule,
-      PrismaModule,
+      // Note: RedisModule and PrismaModule are already initialized in HorizonAuthModule.forRoot()
+      // They are @Global() modules, so they're available here
     ];
 
     // Conditionally add feature modules based on configuration

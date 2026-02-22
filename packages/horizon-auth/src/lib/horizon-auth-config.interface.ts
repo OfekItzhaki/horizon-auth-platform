@@ -3,7 +3,11 @@ export interface HorizonAuthConfig {
   ssoMode?: boolean;
   authServiceUrl?: string; // URL of the auth service (required if ssoMode is true)
 
-  // Database configuration (required unless ssoMode is true)
+  /**
+   * @deprecated Database configuration is no longer used by HorizonAuth.
+   * Applications must provide their own @Global() PrismaModule that exports PrismaService.
+   * See the migration guide in the HorizonAuthModule documentation.
+   */
   database?: {
     url: string;
   };

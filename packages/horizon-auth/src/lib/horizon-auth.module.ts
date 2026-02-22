@@ -4,16 +4,73 @@ import { HorizonAuthConfig } from './horizon-auth-config.interface';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { RedisModule } from '../redis/redis.module';
-import { PrismaModule } from '../prisma/prisma.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+/**
+ * HorizonAuthModule - Authentication and authorization module for Horizon applications
+ * 
+ * IMPORTANT: Applications using this module in full mode (non-SSO) MUST provide their own
+ * @Global() PrismaModule that exports a PrismaService. The HorizonAuth services will inject
+ * the application's PrismaService for all database operations.
+ * 
+ * Example setup in your application:
+ * ```typescript
+ * // app.module.ts
+ * import { Module } from '@nestjs/common';
+ * import { HorizonAuthModule } from '@ofeklabs/horizon-auth';
+ * import { PrismaModule } from './prisma/prisma.module'; // Your PrismaModule
+ * 
+ * @Module({
+ *   imports: [
+ *     PrismaModule, // Must be imported BEFORE HorizonAuthModule
+ *     HorizonAuthModule.forRoot({
+ *       redis: { host: 'localhost', port: 6379 },
+ *       jwt: {
+ *         privateKey: process.env.JWT_PRIVATE_KEY,
+ *         publicKey: process.env.JWT_PUBLIC_KEY,
+ *       },
+ *       // Note: database.url is deprecated - use your own PrismaModule
+ *     }),
+ *   ],
+ * })
+ * export class AppModule {}
+ * 
+ * // prisma/prisma.module.ts
+ * import { Module, Global } from '@nestjs/common';
+ * import { PrismaService } from './prisma.service';
+ * 
+ * @Global() // MUST be marked as Global
+ * @Module({
+ *   providers: [PrismaService],
+ *   exports: [PrismaService], // MUST export PrismaService
+ * })
+ * export class PrismaModule {}
+ * ```
+ * 
+ * For SSO mode (token verification only), no PrismaModule is required:
+ * ```typescript
+ * HorizonAuthModule.forRoot({
+ *   ssoMode: true,
+ *   authServiceUrl: 'https://auth.example.com',
+ *   jwt: {
+ *     publicKey: process.env.JWT_PUBLIC_KEY,
+ *   },
+ * })
+ * ```
+ */
 @Global()
 @Module({})
 export class HorizonAuthModule {
   /**
    * Configure the HorizonAuth module with the provided configuration
+   * 
    * @param config - Configuration options
    * @returns Dynamic module
+   * 
+   * @remarks
+   * In full mode (non-SSO), your application MUST provide a @Global() PrismaModule
+   * that exports PrismaService. HorizonAuth will inject this service for all
+   * database operations. The database.url configuration option is deprecated.
    */
   static forRoot(config: HorizonAuthConfig): DynamicModule {
     // Validate configuration
@@ -50,10 +107,11 @@ export class HorizonAuthModule {
     }
 
     // Full Mode - import all modules (auth service)
+    // NOTE: Application must provide its own @Global() PrismaModule
+    // The PrismaService will be injected from the application's module
     return {
       module: HorizonAuthModule,
       imports: [
-        PrismaModule.forRoot(finalConfig),
         RedisModule.forRoot(finalConfig),
         AuthModule.forFullMode(finalConfig), // Pass config for conditional feature registration
         UsersModule,
@@ -65,8 +123,14 @@ export class HorizonAuthModule {
 
   /**
    * Configure the HorizonAuth module asynchronously
+   * 
    * @param options - Async configuration options
    * @returns Dynamic module
+   * 
+   * @remarks
+   * In full mode (non-SSO), your application MUST provide a @Global() PrismaModule
+   * that exports PrismaService. HorizonAuth will inject this service for all
+   * database operations. The database.url configuration option is deprecated.
    */
   static forRootAsync(options: {
     useFactory: (...args: any[]) => Promise<HorizonAuthConfig> | HorizonAuthConfig;
@@ -119,10 +183,7 @@ export class HorizonAuthModule {
     }
 
     // Full mode validation (auth service)
-    if (!config.database?.url) {
-      throw new Error('HorizonAuth: database.url is required (or enable ssoMode)');
-    }
-
+    // NOTE: database.url is no longer required here - application provides PrismaModule
     if (!config.redis?.host || !config.redis?.port) {
       throw new Error('HorizonAuth: redis.host and redis.port are required (or enable ssoMode)');
     }

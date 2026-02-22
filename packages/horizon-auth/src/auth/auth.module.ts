@@ -14,7 +14,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { UsersModule } from '../users/users.module';
 import { RedisModule } from '../redis/redis.module';
-import { PrismaModule } from '../prisma/prisma.module';
+
 import { TwoFactorModule } from '../two-factor/two-factor.module';
 import { DeviceModule } from '../devices/device.module';
 import { PushTokenModule } from '../push-tokens/push-token.module';
@@ -59,7 +59,6 @@ export class AuthModule {
       ]),
       UsersModule,
       RedisModule,
-      PrismaModule,
     ];
 
     // Conditionally add feature modules based on configuration

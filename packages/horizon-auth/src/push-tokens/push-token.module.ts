@@ -1,10 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PushTokenService } from './push-token.service';
-import { PrismaModule } from '../prisma/prisma.module';
 import { DeviceModule } from '../devices/device.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => DeviceModule)],
+  imports: [forwardRef(() => DeviceModule)],
   providers: [PushTokenService],
   exports: [PushTokenService],
 })

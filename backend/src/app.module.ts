@@ -4,6 +4,7 @@ import { HorizonAuthModule } from '@ofeklabs/horizon-auth';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TestSsoController } from './test-sso.controller';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
     imports: [
@@ -11,11 +12,12 @@ import { TestSsoController } from './test-sso.controller';
             isGlobal: true,
         }),
         
+        // Import PrismaModule BEFORE HorizonAuthModule
+        PrismaModule,
+        
         // Full Mode - Auth service with all enhanced features
         HorizonAuthModule.forRoot({
-            database: {
-                url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/horizon_auth',
-            },
+            // database.url is deprecated - removed
             redis: {
                 host: process.env.REDIS_HOST || 'localhost',
                 port: parseInt(process.env.REDIS_PORT || '6379'),

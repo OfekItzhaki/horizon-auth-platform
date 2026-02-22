@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { TokenService } from '../auth/services/token.service';
 import { SocialAccountAlreadyLinkedException } from '../common/exceptions';
@@ -21,7 +21,7 @@ export interface AuthResponse {
 @Injectable()
 export class SocialAuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaClient,
     private readonly usersService: UsersService,
     private readonly tokenService: TokenService,
   ) {}

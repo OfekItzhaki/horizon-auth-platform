@@ -3,7 +3,7 @@ import { UsersService, SafeUser } from '../users/users.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { RedisService } from '../redis/redis.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 import { TwoFactorService } from '../two-factor/two-factor.service';
 import { DeviceService } from '../devices/device.service';
 import { AccountDeactivatedException } from '../common/exceptions';
@@ -26,7 +26,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaClient,
     private readonly twoFactorService: TwoFactorService,
     @Optional() private readonly deviceService?: DeviceService,
   ) {}

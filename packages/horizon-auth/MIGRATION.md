@@ -1,6 +1,130 @@
 # Migration Guide: HorizonAuth
 
-## v1.0.4 - Critical TypeScript Compilation Fix
+## v1.0.5 - Diagnostic Logging (Temporary)
+
+### Overview
+
+HorizonAuth v1.0.5 adds extensive logging to diagnose runtime issues. This is a temporary diagnostic version.
+
+**IMPORTANT DISCOVERY**: If you see logs showing `this.prisma` is defined but get errors like "Cannot read properties of undefined (reading 'findUnique')", the issue is that your Prisma schema is missing the required models!
+
+### Required Prisma Schema
+
+The @ofeklabs/horizon-auth package requires specific Prisma models in your application's schema. You MUST add these models to your `schema.prisma`:
+
+#### Required Models:
+1. **User** - Core user model with authentication fields
+2. **RefreshToken** - JWT refresh token storage
+3. **SocialAccount** - OAuth social login accounts (if using social login feature)
+4. **Device** - Device management (if using device management feature)
+5. **PushToken** - Push notification tokens (if using push notifications feature)
+6. **TwoFactorAuth** - 2FA TOTP secrets (if using 2FA feature)
+7. **BackupCode** - 2FA backup codes (if using 2FA feature)
+
+### Migration Steps
+
+#### Step 1: Copy the Schema
+
+Copy the complete schema from `node_modules/@ofeklabs/horizon-auth/prisma/schema.prisma` to your application's `prisma/schema.prisma`.
+
+**IMPORTANT**: Merge the models into your existing schema - don't replace your entire schema!
+
+```prisma
+// Your existing datasource and generator
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ADD these models from @ofeklabs/horizon-auth
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  fullName           String?
+  passwordHash       String?
+  emailVerified      Boolean         @default(false)
+  emailVerifyToken   String?         @unique
+  resetToken         String?         @unique
+  resetTokenExpiry   DateTime?
+  tenantId           String          @default("default")
+  roles              String[]        @default(["user"])
+  isActive           Boolean         @default(true)
+  deactivationReason String?
+  refreshTokens      RefreshToken[]
+  socialAccounts     SocialAccount[]
+  devices            Device[]
+  pushTokens         PushToken[]
+  twoFactorAuth      TwoFactorAuth?
+  backupCodes        BackupCode[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([email])
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("users")
+}
+
+model RefreshToken {
+  id            String    @id @default(cuid())
+  hashedToken   String    @unique
+  userId        String
+  deviceId      String?
+  expiresAt     DateTime
+  parentTokenId String?
+  revoked       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([hashedToken])
+  @@map("refresh_tokens")
+}
+
+// ... (copy remaining models from the package schema)
+```
+
+#### Step 2: Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+#### Step 3: Create and Run Migration
+
+```bash
+npx prisma migrate dev --name add-horizon-auth-models
+```
+
+#### Step 4: Update to v1.0.5
+
+```bash
+npm install @ofeklabs/horizon-auth@1.0.5
+```
+
+### Troubleshooting
+
+#### Error: "Cannot read properties of undefined (reading 'findUnique')"
+
+**Cause**: Your Prisma schema is missing the User model or other required models.
+
+**Solution**: Follow Step 1 above to add all required models to your schema.
+
+#### Error: "Invalid `prisma.user.findUnique()` invocation"
+
+**Cause**: Prisma Client wasn't regenerated after adding the models.
+
+**Solution**: Run `npx prisma generate` and restart your application.
+
+---
+
+## v1.0.4 - TypeScript Compilation Fix
 
 ### Overview
 

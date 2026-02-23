@@ -100,6 +100,72 @@ Each application has its own authentication.
 ### 1. Install
 
 ```bash
+npm install @ofeklabs/horizon-auth @prisma/client
+```
+
+### 2. **CRITICAL**: Add Required Prisma Models
+
+The package requires specific Prisma models in your schema. Copy all models from `node_modules/@ofeklabs/horizon-auth/prisma/schema.prisma` to your `prisma/schema.prisma`:
+
+```prisma
+// Your existing datasource and generator
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ADD these models from @ofeklabs/horizon-auth
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  fullName           String?
+  passwordHash       String?
+  emailVerified      Boolean         @default(false)
+  emailVerifyToken   String?         @unique
+  resetToken         String?         @unique
+  resetTokenExpiry   DateTime?
+  tenantId           String          @default("default")
+  roles              String[]        @default(["user"])
+  isActive           Boolean         @default(true)
+  deactivationReason String?
+  refreshTokens      RefreshToken[]
+  socialAccounts     SocialAccount[]
+  devices            Device[]
+  pushTokens         PushToken[]
+  twoFactorAuth      TwoFactorAuth?
+  backupCodes        BackupCode[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([email])
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("users")
+}
+
+model RefreshToken {
+  // ... (see prisma/schema.prisma for complete definition)
+}
+
+// ... (copy all other models)
+```
+
+**See `node_modules/@ofeklabs/horizon-auth/prisma/README.md` for complete schema and customization options.**
+
+Then generate Prisma Client and run migrations:
+
+```bash
+npx prisma generate
+npx prisma migrate dev --name add-horizon-auth-models
+```
+
+### 3. Create PrismaModule
+
+```bash
 npm install @ofeklabs/horizon-auth @prisma/client ioredis passport passport-jwt
 npm install -D prisma
 ```

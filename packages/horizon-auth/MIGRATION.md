@@ -1,6 +1,46 @@
-# Migration Guide: HorizonAuth v1.0.1 to v1.0.2
+# Migration Guide: HorizonAuth
 
-## Overview
+## v1.0.4 - Critical TypeScript Compilation Fix
+
+### Overview
+
+HorizonAuth v1.0.4 fixes a critical runtime issue where `this.prisma` becomes undefined when methods are called, even though constructor injection succeeds. This was caused by TypeScript's `useDefineForClassFields` behavior with ES2021 target.
+
+### The Problem
+
+With TypeScript's default `useDefineForClassFields: true` (implicit with ES2021 target):
+1. Constructor parameter injection works correctly (`this.prisma` is defined)
+2. Constructor validation passes
+3. TypeScript then uses `Object.defineProperty()` to define class fields AFTER the constructor
+4. This overwrites the injected value with `undefined`
+5. Runtime methods fail with "Cannot read properties of undefined"
+
+### The Fix
+
+Set `useDefineForClassFields: false` in `tsconfig.json` to use legacy class field behavior compatible with NestJS dependency injection.
+
+### Migration Steps
+
+**No code changes required!** Simply update to v1.0.4:
+
+```bash
+npm install @ofeklabs/horizon-auth@1.0.4
+```
+
+This version includes the corrected TypeScript compilation settings.
+
+### Symptoms This Fixes
+
+- ✅ Constructor validation passes (no errors during startup)
+- ❌ Runtime errors: `Cannot read properties of undefined (reading 'findUnique')`
+- ❌ `this.prisma` is undefined inside service methods
+- ❌ Error occurs only when methods are called, not during construction
+
+---
+
+## v1.0.2 - String-Based Injection Token
+
+### Overview
 
 HorizonAuth v1.0.2 fixes a critical Prisma dependency injection issue by using a string-based injection token (`PRISMA_CLIENT_TOKEN`) instead of class-based injection. This eliminates minification issues that caused "Cannot resolve dependencies" errors.
 

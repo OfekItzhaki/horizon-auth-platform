@@ -26,7 +26,15 @@ export class SocialAuthService {
     @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
     private readonly usersService: UsersService,
     private readonly tokenService: TokenService,
-  ) {}
+  ) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in SocialAuthService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Authenticate user with Google OAuth2

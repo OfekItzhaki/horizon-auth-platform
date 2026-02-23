@@ -9,7 +9,15 @@ import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 @Injectable()
 export class TwoFactorService {
-  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in TwoFactorService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Generate TOTP secret and QR code for 2FA setup

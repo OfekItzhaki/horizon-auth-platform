@@ -8,7 +8,15 @@ export type SafeUser = Omit<User, 'passwordHash' | 'emailVerifyToken' | 'resetTo
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in UsersService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Find user by email

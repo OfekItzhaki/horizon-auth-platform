@@ -5,7 +5,15 @@ import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 @Injectable()
 export class AccountService {
-  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in AccountService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Deactivate user account

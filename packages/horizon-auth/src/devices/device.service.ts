@@ -26,7 +26,15 @@ export class DeviceService {
   constructor(
     @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
     @Optional() @Inject(forwardRef(() => PushTokenService)) private pushTokenService?: PushTokenService,
-  ) {}
+  ) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in DeviceService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Generate a deterministic fingerprint from user agent

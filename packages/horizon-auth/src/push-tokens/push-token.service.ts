@@ -12,7 +12,15 @@ export interface PushTokenData {
 
 @Injectable()
 export class PushTokenService {
-  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {
+    if (!this.prisma) {
+      throw new Error(
+        `PRISMA_CLIENT_TOKEN injection failed in PushTokenService. ` +
+        `Token value: "${PRISMA_CLIENT_TOKEN}". ` +
+        `Please ensure your application's PrismaModule is @Global() and provides PRISMA_CLIENT_TOKEN before HorizonAuthModule.`
+      );
+    }
+  }
 
   /**
    * Register a push notification token

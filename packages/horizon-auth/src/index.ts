@@ -7,6 +7,7 @@ export * from './common/decorators/public.decorator';
 export * from './common/decorators/current-user.decorator';
 export * from './common/decorators/roles.decorator';
 export * from './common/decorators/current-tenant.decorator';
+export * from './common/constants';
 export * from './auth/guards/jwt-auth.guard';
 export * from './auth/guards/roles.guard';
 export * from './users/users.service';

@@ -5,10 +5,11 @@ import { generateSecret, generateURI, verify } from 'otplib';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 @Injectable()
 export class TwoFactorService {
-  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
 
   /**
    * Generate TOTP secret and QR code for 2FA setup

@@ -2,12 +2,13 @@ import { Injectable, ConflictException, NotFoundException, Inject } from '@nestj
 import { PrismaClient } from '@prisma/client';
 import { User } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 export type SafeUser = Omit<User, 'passwordHash' | 'emailVerifyToken' | 'resetToken' | 'resetTokenExpiry'>;
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {}
 
   /**
    * Find user by email

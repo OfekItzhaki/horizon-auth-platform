@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { createHash } from 'crypto';
 import { UAParser } from 'ua-parser-js';
 import { PushTokenService } from '../push-tokens/push-token.service';
+import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 export interface DeviceInfo {
   userAgent: string;
@@ -23,7 +24,7 @@ export interface DeviceResponse {
 @Injectable()
 export class DeviceService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
     @Optional() @Inject(forwardRef(() => PushTokenService)) private pushTokenService?: PushTokenService,
   ) {}
 

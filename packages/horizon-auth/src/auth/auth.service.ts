@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { TwoFactorService } from '../two-factor/two-factor.service';
 import { DeviceService } from '../devices/device.service';
 import { AccountDeactivatedException } from '../common/exceptions';
+import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 export interface AuthResult {
   user: SafeUser;
@@ -26,8 +27,8 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
-    private readonly twoFactorService: TwoFactorService,
+    @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
+    @Optional() private readonly twoFactorService?: TwoFactorService,
     @Optional() private readonly deviceService?: DeviceService,
   ) {}
 
@@ -116,8 +117,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if 2FA is enabled
-    const has2FA = await this.twoFactorService.isTwoFactorEnabled(user.id);
+    // Check if 2FA is enabled (only if TwoFactorService is available)
+    const has2FA = this.twoFactorService 
+      ? await this.twoFactorService.isTwoFactorEnabled(user.id)
+      : false;
     if (has2FA) {
       // Return intermediate response requiring 2FA
       return {
@@ -178,6 +181,11 @@ export class AuthService {
     code: string,
     deviceInfo?: { userAgent?: string; ip?: string; deviceName?: string },
   ): Promise<AuthResult> {
+    // Check if TwoFactorService is available
+    if (!this.twoFactorService) {
+      throw new UnauthorizedException('Two-factor authentication is not enabled');
+    }
+
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('Invalid user');

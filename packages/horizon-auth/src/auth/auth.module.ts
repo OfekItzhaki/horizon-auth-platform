@@ -59,14 +59,11 @@ export class AuthModule {
       ]),
       UsersModule,
       RedisModule,
+      TwoFactorModule, // Always import - AuthService optionally uses it
     ];
 
     // Conditionally add feature modules based on configuration
     const features = config?.features;
-
-    if (features?.twoFactor?.enabled) {
-      imports.push(TwoFactorModule);
-    }
 
     if (features?.deviceManagement?.enabled) {
       imports.push(DeviceModule);

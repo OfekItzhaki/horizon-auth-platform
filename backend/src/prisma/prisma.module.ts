@@ -1,18 +1,18 @@
 import { Global, Module } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PRISMA_CLIENT_TOKEN } from '@ofeklabs/horizon-auth';
 import { PrismaService } from './prisma.service';
 
 @Global()
 @Module({
   providers: [
     PrismaService,
-    // Provide PrismaClient as an alias to PrismaService
-    // This allows horizon-auth services to inject PrismaClient
+    // Provide PrismaClient using the string token from horizon-auth
+    // This avoids minification issues with class-based injection tokens
     {
-      provide: PrismaClient,
+      provide: PRISMA_CLIENT_TOKEN,
       useExisting: PrismaService,
     },
   ],
-  exports: [PrismaService, PrismaClient],
+  exports: [PrismaService, PRISMA_CLIENT_TOKEN],
 })
 export class PrismaModule {}

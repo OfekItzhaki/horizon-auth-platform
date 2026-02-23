@@ -4,6 +4,7 @@ import { Inject } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { TokenService } from '../auth/services/token.service';
 import { SocialAccountAlreadyLinkedException } from '../common/exceptions';
+import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
 export interface SocialProfile {
   provider: 'google' | 'facebook';
@@ -22,7 +23,7 @@ export interface AuthResponse {
 @Injectable()
 export class SocialAuthService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
     private readonly usersService: UsersService,
     private readonly tokenService: TokenService,
   ) {}

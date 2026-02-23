@@ -1,6 +1,6 @@
 {
   "name": "@ofeklabs/horizon-auth",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Production-ready NestJS authentication module with 2FA, device management, push notifications, and account management",
   "author": "Ofek Itzhaki",
   "license": "MIT",
@@ -33,6 +33,14 @@
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
+  },
+  "peerDependenciesMeta": {
+    "resend": {
+      "optional": true
+    },
+    "@sendgrid/mail": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@nestjs/jwt": "^10.2.0",

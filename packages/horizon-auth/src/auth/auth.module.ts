@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { JwksController } from './jwks.controller';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
+import { EmailService } from './services/email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtSsoStrategy } from './strategies/jwt-sso.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -90,6 +91,7 @@ export class AuthModule {
         AuthService,
         PasswordService,
         TokenService,
+        EmailService,
         JwtStrategy, // Use full strategy (with database/redis)
         JwtAuthGuard,
         RolesGuard,

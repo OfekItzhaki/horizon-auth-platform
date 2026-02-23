@@ -6,6 +6,7 @@ import { RedisService } from '../redis/redis.service';
 import { PrismaClient } from '@prisma/client';
 import { TwoFactorService } from '../two-factor/two-factor.service';
 import { DeviceService } from '../devices/device.service';
+import { EmailService } from './services/email.service';
 import { AccountDeactivatedException } from '../common/exceptions';
 import { PRISMA_CLIENT_TOKEN } from '../common/constants';
 
@@ -32,6 +33,7 @@ export class AuthService {
     @Inject(PRISMA_CLIENT_TOKEN) prisma: PrismaClient,
     @Optional() private readonly twoFactorService?: TwoFactorService,
     @Optional() private readonly deviceService?: DeviceService,
+    @Optional() private readonly emailService?: EmailService,
   ) {
     this.prisma = prisma;
     console.log('🔍 AuthService constructor - prisma type:', prisma?.constructor?.name);
@@ -72,6 +74,11 @@ export class AuthService {
     // Update full name if provided
     if (fullName) {
       await this.usersService.update(user.id, { fullName });
+    }
+
+    // Send email verification email if EmailService is available
+    if (this.emailService && user.emailVerifyToken) {
+      await this.emailService.sendEmailVerificationEmail(email, user.emailVerifyToken);
     }
 
     // Generate tokens
@@ -383,9 +390,14 @@ export class AuthService {
    */
   async requestPasswordReset(email: string): Promise<void> {
     const resetToken = await this.usersService.generateResetToken(email);
-    // TODO: Send email with reset link containing token
-    // For now, just log it (in production, integrate with email service)
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    
+    // Send email if EmailService is available, otherwise log to console
+    if (this.emailService) {
+      await this.emailService.sendPasswordResetEmail(email, resetToken);
+    } else {
+      // Fallback to console logging for backward compatibility
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+    }
   }
 
   /**

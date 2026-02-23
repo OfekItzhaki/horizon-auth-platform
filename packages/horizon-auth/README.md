@@ -306,6 +306,12 @@ interface HorizonAuthConfig {
   };
 
   // Optional
+  email?: {
+    from: string; // Sender email address
+    customSender?: (to: string, subject: string, html: string) => Promise<void>;
+    provider?: 'resend' | 'sendgrid';
+    apiKey?: string; // Required if using provider
+  };
   multiTenant?: {
     enabled: boolean;
     tenantIdExtractor?: 'header' | 'subdomain' | 'custom';
@@ -321,6 +327,67 @@ interface HorizonAuthConfig {
   };
 }
 ```
+
+## Email Configuration
+
+The package supports email sending for password resets and email verification. You can use a custom sender function or one of the supported providers.
+
+### Provider Setup
+
+**Important**: You must install the SDK for your chosen email provider:
+
+```bash
+# For Resend
+npm install resend
+
+# For SendGrid
+npm install @sendgrid/mail
+```
+
+### Using Resend
+
+```typescript
+HorizonAuthModule.forRoot({
+  // ... other config
+  email: {
+    from: 'noreply@yourdomain.com',
+    provider: 'resend',
+    apiKey: process.env.RESEND_API_KEY,
+  },
+});
+```
+
+### Using SendGrid
+
+```typescript
+HorizonAuthModule.forRoot({
+  // ... other config
+  email: {
+    from: 'noreply@yourdomain.com',
+    provider: 'sendgrid',
+    apiKey: process.env.SENDGRID_API_KEY,
+  },
+});
+```
+
+### Using Custom Sender
+
+```typescript
+HorizonAuthModule.forRoot({
+  // ... other config
+  email: {
+    from: 'noreply@yourdomain.com',
+    customSender: async (to: string, subject: string, html: string) => {
+      // Your custom email sending logic
+      await yourEmailService.send({ to, subject, html });
+    },
+  },
+});
+```
+
+### Development Mode
+
+If no email configuration is provided, tokens will be logged to the console for development purposes.
 
 ## Decorators
 

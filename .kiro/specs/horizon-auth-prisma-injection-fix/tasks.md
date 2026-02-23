@@ -1,3 +1,16 @@
+The @ofeklabs/horizon-auth v1.0.0 package still has the Prisma dependency injection issue. The UsersService can't resolve "argument t" (which appears to be the PrismaService in minified code).
+
+Summary:
+
+✅ Frontend login fixed (rememberMe removed from schema)
+✅ Backend compiles successfully
+✅ Redis connected
+✅ Database connected
+✅ Updated horizon-auth package to v1.0.0
+❌ HorizonAuthModule still can't inject PrismaService into UsersService
+❌ Auth endpoints (login, password reset) return 500 errors
+The package needs another update to properly use the global PrismaService. The issue is in how the package's UsersModule imports/injects the Prisma dependency.
+
 # Implementation Plan
 
 - [x] 1. Write bug condition exploration test

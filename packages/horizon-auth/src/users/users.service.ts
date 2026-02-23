@@ -8,7 +8,13 @@ export type SafeUser = Omit<User, 'passwordHash' | 'emailVerifyToken' | 'resetTo
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient) {
+  private readonly prisma: PrismaClient;
+
+  constructor(@Inject(PRISMA_CLIENT_TOKEN) prisma: PrismaClient) {
+    this.prisma = prisma;
+    console.log('🔍 UsersService constructor - prisma type:', prisma?.constructor?.name);
+    console.log('🔍 UsersService constructor - prisma defined:', !!prisma);
+    console.log('🔍 UsersService constructor - this.prisma defined:', !!this.prisma);
     if (!this.prisma) {
       throw new Error(
         `PRISMA_CLIENT_TOKEN injection failed in UsersService. ` +
@@ -24,6 +30,11 @@ export class UsersService {
    * @returns User or null
    */
   async findByEmail(email: string): Promise<User | null> {
+    console.log('🔍 findByEmail called - this.prisma defined:', !!this.prisma);
+    console.log('🔍 findByEmail called - this.prisma type:', this.prisma?.constructor?.name);
+    if (!this.prisma) {
+      throw new Error('RUNTIME ERROR: this.prisma is undefined in findByEmail!');
+    }
     return this.prisma.user.findUnique({
       where: { email },
       include: { refreshTokens: true },

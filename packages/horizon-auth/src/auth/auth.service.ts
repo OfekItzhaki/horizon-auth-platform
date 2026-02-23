@@ -22,15 +22,21 @@ export interface TwoFactorRequiredResult {
 
 @Injectable()
 export class AuthService {
+  private readonly prisma: PrismaClient;
+
   constructor(
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-    @Inject(PRISMA_CLIENT_TOKEN) private readonly prisma: PrismaClient,
+    @Inject(PRISMA_CLIENT_TOKEN) prisma: PrismaClient,
     @Optional() private readonly twoFactorService?: TwoFactorService,
     @Optional() private readonly deviceService?: DeviceService,
   ) {
+    this.prisma = prisma;
+    console.log('🔍 AuthService constructor - prisma type:', prisma?.constructor?.name);
+    console.log('🔍 AuthService constructor - prisma defined:', !!prisma);
+    console.log('🔍 AuthService constructor - this.prisma defined:', !!this.prisma);
     if (!this.prisma) {
       throw new Error(
         `PRISMA_CLIENT_TOKEN injection failed in AuthService. ` +

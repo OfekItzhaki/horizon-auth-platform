@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class AccountService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
 
   /**
    * Deactivate user account

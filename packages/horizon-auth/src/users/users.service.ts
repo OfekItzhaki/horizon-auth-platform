@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, Inject } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { User } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -7,7 +7,7 @@ export type SafeUser = Omit<User, 'passwordHash' | 'emailVerifyToken' | 'resetTo
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
 
   /**
    * Find user by email

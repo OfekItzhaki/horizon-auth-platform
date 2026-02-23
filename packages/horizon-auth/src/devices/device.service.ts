@@ -23,7 +23,7 @@ export interface DeviceResponse {
 @Injectable()
 export class DeviceService {
   constructor(
-    private readonly prisma: PrismaClient,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
     @Optional() @Inject(forwardRef(() => PushTokenService)) private pushTokenService?: PushTokenService,
   ) {}
 

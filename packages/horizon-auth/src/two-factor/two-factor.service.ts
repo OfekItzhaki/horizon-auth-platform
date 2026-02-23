@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { Inject } from '@nestjs/common';
 import { generateSecret, generateURI, verify } from 'otplib';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
@@ -7,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class TwoFactorService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
 
   /**
    * Generate TOTP secret and QR code for 2FA setup

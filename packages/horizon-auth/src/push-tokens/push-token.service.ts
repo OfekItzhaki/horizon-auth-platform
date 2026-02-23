@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { Inject } from '@nestjs/common';
 
 export interface PushTokenData {
   userId: string;
@@ -10,7 +11,7 @@ export interface PushTokenData {
 
 @Injectable()
 export class PushTokenService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(@Inject(PrismaClient) private readonly prisma: PrismaClient) {}
 
   /**
    * Register a push notification token

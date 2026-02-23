@@ -1,6 +1,6 @@
 {
   "name": "@ofeklabs/horizon-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-ready NestJS authentication module with 2FA, device management, push notifications, and account management",
   "author": "Ofek Itzhaki",
   "license": "MIT",

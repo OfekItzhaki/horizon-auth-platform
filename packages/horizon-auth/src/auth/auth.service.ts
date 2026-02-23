@@ -26,7 +26,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-    private readonly prisma: PrismaClient,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
     private readonly twoFactorService: TwoFactorService,
     @Optional() private readonly deviceService?: DeviceService,
   ) {}
